@@ -39,7 +39,7 @@ def sympy_to_math_mode(sym):
     '''
     return latex(sym, mode='plain', fold_frac_powers=True)
 
-def render_label(amp_sym, label):
+def render_label(amp_sym, label, qi1, qi1_color, qi2, qi2_color):
     '''Render preset sympy expressions as nice LaTeX equations.'''
     presets = {
         sympy.sympify(0): '0',
@@ -75,6 +75,17 @@ def render_label(amp_sym, label):
         if give_up:
             # The expression displayed may not be simplified in the desired way.
             amp_latex = sympy_to_math_mode(amp_sym_orig)
+
+    if qi1 != None:
+        if qi2 == None:
+            new_label = "\\color{" + qi1_color + "}\\phantom{" + label[:qi1] + "}" + label[qi1] + "\\phantom{" + label[qi1+1:] + "}"
+            return render_cache(fr'$\phantom{{{amp_latex}}}\ket{{{new_label}}}$')
+
+        qa, qb = (qi1, qi2) if qi1 < qi2 else (qi2, qi1)
+        ca, cb = (qi1_color, qi2_color) if qi1 < qi2 else (qi2_color, qi1_color)
+        new_label = "\\phantom{" + label[:qa] + "}\\color{" + ca + "}" + label[qa] + "\\phantom{" + label[qa+1:qb] + "}\\color{" + cb + "}" + label[qb] + "\\phantom{" + label[qb+1:] + "}"
+        return render_cache(fr'$\phantom{{{amp_latex}}}\ket{{{new_label}}}$')
+
     return render_cache(fr'${amp_latex}\ket{{{label}}}$')
 
 
@@ -133,10 +144,10 @@ class Diagram:
         g.draw(render_cache(fr'${label}$'),
                x=x, y=y, scale=self.gate_font/12, center=True)
 
-    def state_text(self, g, time, key, amp=1):
+    def state_text(self, g, time, key, amp=1, qi1=None, qi1_color=None, qi2=None, qi2_color=None):
         state_idx = self.possible_states.index(key)
         x, y = self.state_xy(key, time)
-        g.draw(render_label(sympy.sympify(amp), key),
+        g.draw(render_label(sympy.sympify(amp), key, qi1, qi1_color, qi2, qi2_color),
                x=x+self.w_label/2-self.font*0.2, y=y, scale=self.font/12, center=True, text_anchor='end')
         if abs(float(amp)) < 1e-8:
             # Draw red X over it
@@ -180,10 +191,10 @@ class Diagram:
             color = '#e70'
         self.straight_arrow(g, color, xx1, yy1, xx2, yy2, width=w)
 
-    def draw_states(self):
+    def draw_states(self, qi1=None, qi1_color=None, qi2=None, qi2_color=None):
         t = len(self.state_sequence)-1
         for key, amp in self.state_sequence[-1].items():
-            self.state_text(self.d, t, key, amp=amp)
+            self.state_text(self.d, t, key, amp=amp, qi1=qi1, qi1_color=qi1_color, qi2=qi2, qi2_color=qi2_color)
 
     def add_states(self, new_state):
         self.state_sequence.append(new_state)
@@ -195,15 +206,17 @@ class Diagram:
         }
         self.state_sequence[-1] = clean_state
 
-    def perform_h(self, q_i, *, pre_latex=f'', name='H'):
+    def perform_h(self, qi1, *, pre_latex=f'', name='H'):
+        qi1_color = 'red'
+        self.draw_states(qi1=qi1, qi1_color=qi1_color)
         new_state = {}
         t = len(self.state_sequence)-1
         for key, amp in self.state_sequence[-1].items():
-            is_one = key[q_i] == '1'
+            is_one = key[qi1] == '1'
             digits = list(key)
-            digits[q_i] = '0'
+            digits[qi1] = '0'
             zero = ''.join(digits)
-            digits[q_i] = '1'
+            digits[qi1] = '1'
             one = ''.join(digits)
             zero_amp = 1/sympy.sqrt(2)
             one_amp = -zero_amp if is_one else zero_amp
@@ -213,10 +226,13 @@ class Diagram:
             if one not in new_state: new_state[one] = 0
             new_state[zero] += amp*zero_amp
             new_state[one] += amp*one_amp
-        self.transition_text(self.d, t, f'{pre_latex}{name}_{q_i}')
+        self.transition_text(self.d, t, f'{pre_latex}{name}_{{\\color{{{qi1_color}}}{qi1}}}')
         self.add_states(new_state)
 
     def perform_cnot(self, qi1, qi2, *, pre_latex=f'', name='CNOT'):
+        qi1_color = 'red'
+        qi2_color = 'green'
+        self.draw_states(qi1=qi1, qi1_color=qi1_color, qi2=qi2, qi2_color=qi2_color)
         new_state = {}
         t = len(self.state_sequence)-1
         for key, amp in self.state_sequence[-1].items():
@@ -229,18 +245,20 @@ class Diagram:
             self.gate_arrow(self.d, t, key, new_key, amp=1)
             if new_key not in new_state: new_state[new_key] = 0
             new_state[new_key] += amp
-        self.transition_text(self.d, t, f'{pre_latex}{name}_{{{qi1}{qi2}}}')
+        self.transition_text(self.d, t, f'{pre_latex}{name}_{{\\color{{{qi1_color}}}{qi1}\\color{{{qi2_color}}}{qi2}}}')
         self.add_states(new_state)
 
-    def perform_z(self, q_i, *, pre_latex=f'', name='Z'):
+    def perform_z(self, qi1, *, pre_latex=f'', name='Z'):
+        qi1_color = 'red'
+        self.draw_states(qi1=qi1, qi1_color=qi1_color)
         new_state = {}
         t = len(self.state_sequence)-1
         for key, amp in self.state_sequence[-1].items():
-            is_one = key[q_i] == '1'
+            is_one = key[qi1] == '1'
             digits = list(key)
             new_amp = -amp if is_one else amp
             self.gate_arrow(self.d, t, key, key, amp=new_amp/amp)
             if key not in new_state: new_state[key] = 0
             new_state[key] += new_amp
-        self.transition_text(self.d, t, f'{pre_latex}{name}_{{{q_i}}}')
+        self.transition_text(self.d, t, f'{pre_latex}{name}_{{\\color{{{qi1_color}}}{qi1}}}')
         self.add_states(new_state)
