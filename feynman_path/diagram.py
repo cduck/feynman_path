@@ -23,7 +23,7 @@ def _disp(svg, msg):
     display(DispWrap())
     return svg
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def render_cache(latex):
     return _disp(latextools.render_snippet(
             latex,
