@@ -11,7 +11,7 @@ def parse_gate(gate_str):
     return name, args
 
 def draw_diagram(n_qubits, gates):
-    '''Draw a path integral diagram'''
+    '''Draw a path sum diagram'''
     ws_label = 4+0.55*n_qubits
     f = diagram.Diagram(
             n_qubits,
@@ -116,7 +116,7 @@ def main(name, n_qubits, gates, svg=False, png=False, pdf=False, sequence=False,
 
 def run_from_command_line():
     parser = argparse.ArgumentParser(
-        description='Renders a Feynman path integral diagram for a sequence of '
+        description='Renders a Feynman path sum diagram for a sequence of '
                     'quantum gates.')
     parser.add_argument('name', type=str, help=
         'The file name to save (excluding file extension)')

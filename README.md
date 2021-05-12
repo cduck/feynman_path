@@ -1,9 +1,9 @@
-# Feynman Path Integral Diagram for Quantum Circuits
+# Feynman Path Sum Diagram for Quantum Circuits
 
-A visualization tool for the Feynman Path Integral applied to quantum circuits.
+A visualization tool for the Feynman Path Sum applied to quantum circuits.
 The [path integral formulation](https://en.wikipedia.org/wiki/Path_integral_formulation) is an interpretation of quantum mechanics that can aid in understanding superposition and interference.
 
-Path integral:
+Path sum:
 
 <img src="https://raw.githubusercontent.com/cduck/feynman_path/master/examples/no-entanglement.png" width="991.5" />
 
@@ -11,7 +11,7 @@ Circuit diagram:
 
 <img src="https://raw.githubusercontent.com/cduck/feynman_path/master/examples/no-entanglement-circuit.png" width="388" />
 
-How to read a path integral diagram:
+How to read a path sum diagram:
 - Time flows from left to right as gates are executed on qubits.
 - Arrows transition from one state to another and traversing the arrows gives a path to an output.
 - Two diverging arrows indicate a split into two potential outcomes.
@@ -77,7 +77,7 @@ usage: feynman_path [-h] [--svg] [--png] [--pdf] [--sequence] [--circuit]
                     [--scale SCALE] [--verbose]
                     name n_qubits gate [gate ...]
 
-Renders a Feynman path integral diagram for a sequence of quantum gates.
+Renders a Feynman path sum diagram for a sequence of quantum gates.
 
 positional arguments:
   name           The file name to save (excluding file extension)
