@@ -237,10 +237,24 @@ class Diagram:
         t = len(self.state_sequence)-1
         for key, amp in self.state_sequence[-1].items():
             is_one = key[q_i] == '1'
-            digits = list(key)
             new_amp = -amp if is_one else amp
             self.gate_arrow(self.d, t, key, key, amp=new_amp/amp)
             if key not in new_state: new_state[key] = 0
             new_state[key] += new_amp
+        self.transition_text(self.d, t, f'{pre_latex}{name}_{{{q_i}}}')
+        self.add_states(new_state)
+
+    def perform_x(self, q_i, *, pre_latex=f'', name='X'):
+        new_state = {}
+        t = len(self.state_sequence)-1
+        for key, amp in self.state_sequence[-1].items():
+            is_one = key[q_i] == '1'
+            digits = list(key)
+            digits[q_i] = '01'[not is_one]
+            new_key = ''.join(digits)
+            self.gate_arrow(self.d, t, key, new_key, amp=1)
+            if new_key not in new_state:
+                new_state[new_key] = 0
+            new_state[new_key] += amp
         self.transition_text(self.d, t, f'{pre_latex}{name}_{{{q_i}}}')
         self.add_states(new_state)
