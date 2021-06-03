@@ -4,7 +4,7 @@ logger = logging.getLogger(__name__)
 
 name = 'feynman_path'
 package_name = 'feynman_path'
-version = '0.1.1'
+version = '0.1.2'
 
 try:
     with open('README.md', 'r') as f:
