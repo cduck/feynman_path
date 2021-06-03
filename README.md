@@ -35,14 +35,15 @@ python3 -m pip install feynman_path
 Several non-python tools are used to generate the graphics and various output formats.
 These non-python dependencies are listed below and platform-specific installation instructions can be found [here](https://github.com/cduck/latextools/#prerequisites).
 
-- LaTeX: A distribution of LaTeX that provides the `pdflatex` command needs to be installed separately.
-- [Inkscape](https://inkscape.org/): Used to convert the LaTeX expressions into SVG elements and output the PDF format.
-- [Cairo](https://www.cairographics.org/download/) (optional): Only required for the PNG output format.
+- LaTeX: A distribution of LaTeX that provides the `pdflatex` command needs to be installed separately.  Used to generate the gate and state labels.
+- [pdf2svg](https://github.com/dawbarton/pdf2svg): Used to convert the LaTeX expressions into SVG elements.
+- [Inkscape](https://inkscape.org/) (optional): Only required to convert the output to PDF format.
+- [Cairo](https://www.cairographics.org/download/) (optional): Only required to convert the output to PNG format.
 
 ### Ubuntu
 
 ```bash
-sudo apt install texlive inkscape libcairo2  # Or texlive-latex-recommended, or texlive-latex-extra
+sudo apt install texlive pdf2svg inkscape libcairo2  # Or texlive-latex-recommended, or texlive-latex-extra
 ```
 
 ### macOS
@@ -51,7 +52,7 @@ Using [homebrew](https://brew.sh/):
 
 ```bash
 brew install --cask mactex inkscape
-brew install cairo
+brew install pdf2svg cairo
 ```
 
 
