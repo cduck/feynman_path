@@ -4,7 +4,7 @@ import sympy
 from sympy.printing.latex import latex
 import drawSvg as draw
 import latextools
-
+PI = 3.1415926535
 VERBOSE = False
 
 
@@ -138,7 +138,7 @@ class Diagram:
         x, y = self.state_xy(key, time)
         g.draw(render_label(sympy.sympify(amp), key),
                x=x+self.w_label/2-self.font*0.2, y=y, scale=self.font/12, center=True, text_anchor='end')
-        if abs(float(amp)) < 1e-8:
+        if self.get_abs(amp) < 1e-8:
             # Draw red X over it
             ys = self.font/2*1.4
             xs = self.w_label/2*0.7
@@ -175,10 +175,41 @@ class Diagram:
         xx2 = x2 - self.w_label/2 + self.arrow_off
         yy1 = y1 + (y2-y1)*(xx1-x1)/(x2-x1)
         yy2 = y2 - (y2-y1)*(x2-xx2)/(x2-x1)
-        color = '#26f'
-        if abs(float(amp) - abs(float(amp))) >= 1e-8:
-            color = '#e70'
+        #map the amplitude to  a "wheel" of colors
+        color = self.wheel_color(amp)
+        
         self.straight_arrow(g, color, xx1, yy1, xx2, yy2, width=w)
+    
+    def wheel_color(self,amp):
+        angle = sympy.arg(amp)
+        color = '#26f'
+        # Divide the unitary circle in 4 area/colors
+        angle = angle % (2*PI)
+        if angle <= PI/4:
+            #blue
+            color = '#26f'
+        elif angle <= 3*PI/4:
+            #purple
+            color = '#800080' 
+        elif angle <= 5*PI/4:
+            # orange
+            color = '#e70' 
+        elif angle <= 7*PI/4:
+            # yellow
+            color = '#ffce00' 
+        elif angle <= 8*PI/4:
+            # blue
+            color = '#26f' 
+        return color
+
+    def get_abs(self, amp):
+        """
+        Check if the amplitude is complex. If so, return the magnitude.
+        """
+        if isinstance(amp, sympy.Expr):
+            if amp.is_complex:
+                    return abs(amp)
+        return abs(float(amp))
 
     def draw_states(self):
         t = len(self.state_sequence)-1
@@ -191,7 +222,7 @@ class Diagram:
         clean_state = {
             key: amp
             for key, amp in new_state.items()
-            if abs(float(amp)) >= 1e-8
+            if self.get_abs(amp) >= 1e-8
         }
         self.state_sequence[-1] = clean_state
 
@@ -256,5 +287,21 @@ class Diagram:
             if new_key not in new_state:
                 new_state[new_key] = 0
             new_state[new_key] += amp
+        self.transition_text(self.d, t, f'{pre_latex}{name}_{{{q_i}}}')
+        self.add_states(new_state)
+
+    def perform_y(self, q_i, *, pre_latex=f'', name='Y'):
+        new_state = {}
+        t = len(self.state_sequence)-1
+        for key, amp in self.state_sequence[-1].items():
+            is_one = key[q_i] == '1'
+            digits = list(key)
+            digits[q_i] = '01'[not is_one]
+            new_key = ''.join(digits)
+            new_amp = -sympy.I*amp if is_one else sympy.I*amp
+            self.gate_arrow(self.d, t, key, new_key, amp=new_amp/amp)
+            if new_key not in new_state:
+                new_state[new_key] = 0
+            new_state[new_key] += new_amp
         self.transition_text(self.d, t, f'{pre_latex}{name}_{{{q_i}}}')
         self.add_states(new_state)
