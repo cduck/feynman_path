@@ -4,10 +4,16 @@ import latextools
 from . import diagram
 
 
+def int_or_float(s):
+    if s.isdigit():
+        return int(s)
+    else:
+        return float(s)
+
 def parse_gate(gate_str):
     name = gate_str.translate({ord(digit): '-' for digit in '0123456789'}
                              ).split('-')[0]
-    args = tuple(int(arg) for arg in gate_str[len(name):].split(','))
+    args = tuple(int_or_float(arg) for arg in gate_str[len(name):].split(','))
     return name, args
 
 def draw_diagram(n_qubits, gates):

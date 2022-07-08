@@ -4,7 +4,8 @@ import sympy
 from sympy.printing.latex import latex
 import drawSvg as draw
 import latextools
-PI = 3.1415926535
+from colorsys import hls_to_rgb
+
 VERBOSE = False
 
 
@@ -177,31 +178,18 @@ class Diagram:
         yy2 = y2 - (y2-y1)*(x2-xx2)/(x2-x1)
         #map the amplitude to  a "wheel" of colors
         color = self.wheel_color(amp)
-        
         self.straight_arrow(g, color, xx1, yy1, xx2, yy2, width=w)
     
-    def wheel_color(self,amp):
-        angle = sympy.arg(amp)
-        color = '#26f'
-        # Divide the unitary circle in 4 area/colors
-        angle = angle % (2*PI)
-        if angle <= PI/4:
-            #blue
-            color = '#26f'
-        elif angle <= 3*PI/4:
-            #purple
-            color = '#800080' 
-        elif angle <= 5*PI/4:
-            # orange
-            color = '#e70' 
-        elif angle <= 7*PI/4:
-            # yellow
-            color = '#ffce00' 
-        elif angle <= 8*PI/4:
-            # blue
-            color = '#26f' 
-        return color
-
+    def wheel_color(self, amp):
+        """ Maps the amplitude to a color wheel. """
+        offset = 7*sympy.pi/6 # offset to have blue for angle zero
+        angle = sympy.arg(amp)+ offset
+        angle = angle % (2*sympy.pi)
+        angle = (angle / (2*sympy.pi)).evalf(2)
+        mag = min(1,abs(self.get_amp_as_value(amp,n=1)))
+        rgb = hls_to_rgb(angle,0.6,mag)
+        rgb = tuple(int(x*255) for x in rgb)
+        return '#%02x%02x%02x' % (rgb)
     def get_abs(self, amp):
         """
         Check if the amplitude is complex. If so, return the magnitude.
@@ -210,13 +198,27 @@ class Diagram:
             if amp.is_complex:
                     return abs(amp)
         return abs(float(amp))
+    
+    def get_amp_as_value(self, amp, n, digits=2):
+        """
+        Check if the amplitude is a sympy element. 
+        If so, and has more than n ops return the value in digits
+        """
+        if hasattr(amp, "count_ops"):
+                if amp.count_ops() > n:
+                    amp = amp.evalf(digits)
+        return amp
 
     def draw_states(self):
         t = len(self.state_sequence)-1
         for key, amp in self.state_sequence[-1].items():
+            amp = self.get_amp_as_value(amp,n=4)
+                    #amp = 0 if abs(amp)<1e-8 else amp
             self.state_text(self.d, t, key, amp=amp)
 
     def add_states(self, new_state):
+        for key,amp in new_state.items():
+            new_state[key]= sympy.simplify(amp)
         self.state_sequence.append(new_state)
         self.draw_states()
         clean_state = {
@@ -225,27 +227,6 @@ class Diagram:
             if self.get_abs(amp) >= 1e-8
         }
         self.state_sequence[-1] = clean_state
-
-    def perform_h(self, q_i, *, pre_latex=f'', name='H'):
-        new_state = {}
-        t = len(self.state_sequence)-1
-        for key, amp in self.state_sequence[-1].items():
-            is_one = key[q_i] == '1'
-            digits = list(key)
-            digits[q_i] = '0'
-            zero = ''.join(digits)
-            digits[q_i] = '1'
-            one = ''.join(digits)
-            zero_amp = 1/sympy.sqrt(2)
-            one_amp = -zero_amp if is_one else zero_amp
-            self.gate_arrow(self.d, t, key, zero, amp=zero_amp)
-            self.gate_arrow(self.d, t, key, one, amp=one_amp)
-            if zero not in new_state: new_state[zero] = 0
-            if one not in new_state: new_state[one] = 0
-            new_state[zero] += amp*zero_amp
-            new_state[one] += amp*one_amp
-        self.transition_text(self.d, t, f'{pre_latex}{name}_{q_i}')
-        self.add_states(new_state)
 
     def perform_cnot(self, qi1, qi2, *, pre_latex=f'', name='CNOT'):
         new_state = {}
@@ -263,45 +244,70 @@ class Diagram:
         self.transition_text(self.d, t, f'{pre_latex}{name}_{{{qi1}{qi2}}}')
         self.add_states(new_state)
 
-    def perform_z(self, q_i, *, pre_latex=f'', name='Z'):
-        new_state = {}
-        t = len(self.state_sequence)-1
-        for key, amp in self.state_sequence[-1].items():
-            is_one = key[q_i] == '1'
-            new_amp = -amp if is_one else amp
-            self.gate_arrow(self.d, t, key, key, amp=new_amp/amp)
-            if key not in new_state: new_state[key] = 0
-            new_state[key] += new_amp
-        self.transition_text(self.d, t, f'{pre_latex}{name}_{{{q_i}}}')
-        self.add_states(new_state)
 
     def perform_x(self, q_i, *, pre_latex=f'', name='X'):
+        X_gate = [[0, 1], [1, 0]]
+        self.perform_single_gate( q_i, pre_latex, name, X_gate)
+    
+    def perform_y(self, q_i, *, pre_latex=f'', name='Y'):
+        Y_gate = [[0, -sympy.I], [sympy.I, 0]]
+        self.perform_single_gate( q_i, pre_latex, name, Y_gate)
+
+    def perform_z(self, q_i, *, pre_latex=f'', name='Z'):
+        Z_gate = [[1, 0], [0, -1]]
+        self.perform_single_gate( q_i, pre_latex, name, Z_gate)
+
+    def perform_h(self, q_i, *, pre_latex=f'', name='H'):
+        sqrt2 = sympy.sqrt(2)
+        H_gate = [[1/sqrt2, 1/sqrt2],
+                  [1/sqrt2, -1/sqrt2]]
+        self.perform_single_gate( q_i, pre_latex, name, H_gate)
+    
+    def perform_rx(self, q_i, half_turns, *, pre_latex=f'', name='Rx'):
+        theta = sympy.pi*half_turns
+        Rx_gate = [[sympy.cos(theta/2), -sympy.I*sympy.sin(theta/2)],
+                   [-sympy.I*sympy.sin(theta/2), sympy.cos(theta/2)]]
+        self.perform_single_gate( q_i, pre_latex, name, Rx_gate)
+
+    def perform_ry(self, q_i, half_turns, *, pre_latex=f'', name='Ry'):
+        theta = sympy.pi*half_turns
+        Ry_gate = [[sympy.cos(theta/2), -sympy.sin(theta/2)],
+                   [sympy.sin(theta/2), sympy.cos(theta/2)]]
+        self.perform_single_gate( q_i, pre_latex, name, Ry_gate)
+
+    def perform_rz(self, q_i, half_turns, *, pre_latex=f'', name='Rz'):
+        theta = sympy.pi*half_turns
+        Rz_gate = [[ sympy.exp(-sympy.I*theta/2), 0],
+                   [0,  sympy.exp(sympy.I*theta/2)]]
+        self.perform_single_gate( q_i, pre_latex, name, Rz_gate)
+
+    def perform_single_gate(self, q_i, pre_latex, name, gate_matrix):
         new_state = {}
         t = len(self.state_sequence)-1
         for key, amp in self.state_sequence[-1].items():
             is_one = key[q_i] == '1'
             digits = list(key)
-            digits[q_i] = '01'[not is_one]
-            new_key = ''.join(digits)
-            self.gate_arrow(self.d, t, key, new_key, amp=1)
-            if new_key not in new_state:
-                new_state[new_key] = 0
-            new_state[new_key] += amp
-        self.transition_text(self.d, t, f'{pre_latex}{name}_{{{q_i}}}')
+            digits[q_i] = '0'
+            zero = ''.join(digits)
+            digits[q_i] = '1'
+            one = ''.join(digits)
+            if is_one:
+                zero_amp  = gate_matrix[0][1] 
+                one_amp = gate_matrix[1][1] 
+            else:
+                zero_amp = gate_matrix[0][0] 
+                one_amp = gate_matrix[1][0] 
+
+            if zero_amp != 0:
+                self.gate_arrow(self.d, t, key, zero, amp=zero_amp)
+                if zero not in new_state: new_state[zero] = 0
+                new_state[zero] += zero_amp*amp
+            if one_amp != 0:
+                self.gate_arrow(self.d, t, key, one, amp=one_amp)
+                if one not in new_state: new_state[one] = 0
+                new_state[one] += one_amp*amp
+    
+        self.transition_text(self.d, t, f'{pre_latex}{name}_{q_i}')
         self.add_states(new_state)
 
-    def perform_y(self, q_i, *, pre_latex=f'', name='Y'):
-        new_state = {}
-        t = len(self.state_sequence)-1
-        for key, amp in self.state_sequence[-1].items():
-            is_one = key[q_i] == '1'
-            digits = list(key)
-            digits[q_i] = '01'[not is_one]
-            new_key = ''.join(digits)
-            new_amp = -sympy.I*amp if is_one else sympy.I*amp
-            self.gate_arrow(self.d, t, key, new_key, amp=new_amp/amp)
-            if new_key not in new_state:
-                new_state[new_key] = 0
-            new_state[new_key] += new_amp
-        self.transition_text(self.d, t, f'{pre_latex}{name}_{{{q_i}}}')
-        self.add_states(new_state)
+
