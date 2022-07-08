@@ -176,7 +176,7 @@ class Diagram:
         xx2 = x2 - self.w_label/2 + self.arrow_off
         yy1 = y1 + (y2-y1)*(xx1-x1)/(x2-x1)
         yy2 = y2 - (y2-y1)*(x2-xx2)/(x2-x1)
-        #map the amplitude to  a "wheel" of colors
+        # map the amplitude to  a "wheel" of colors
         color = self.wheel_color(amp)
         self.straight_arrow(g, color, xx1, yy1, xx2, yy2, width=w)
     
