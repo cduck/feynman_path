@@ -167,7 +167,7 @@ class Diagram:
                  marker_start=self.make_arrow(color)))
 
     def gate_arrow(self, g, time1, key1, key2, amp=1):
-        w = float(abs(amp))
+        w = max(float(abs(amp)),.3)
         x1, y1 = self.state_xy(key1, time1)
         x2, y2 = self.state_xy(key2, time1+1)
         x1 += self.arrow_off
@@ -238,7 +238,7 @@ class Diagram:
             if is_one:
                 digits[qi2] = '01'[not is_targ_one]
             new_key = ''.join(digits)
-            self.gate_arrow(self.d, t, key, new_key, amp=1)
+            self.gate_arrow(self.d, t, key, new_key, amp=amp)
             if new_key not in new_state: new_state[new_key] = 0
             new_state[new_key] += amp
         self.transition_text(self.d, t, f'{pre_latex}{name}_{{{qi1}{qi2}}}')
@@ -299,11 +299,11 @@ class Diagram:
                 one_amp = gate_matrix[1][0] 
 
             if zero_amp != 0:
-                self.gate_arrow(self.d, t, key, zero, amp=zero_amp)
+                self.gate_arrow(self.d, t, key, zero, amp=zero_amp*amp)
                 if zero not in new_state: new_state[zero] = 0
                 new_state[zero] += zero_amp*amp
             if one_amp != 0:
-                self.gate_arrow(self.d, t, key, one, amp=one_amp)
+                self.gate_arrow(self.d, t, key, one, amp=one_amp*amp)
                 if one not in new_state: new_state[one] = 0
                 new_state[one] += one_amp*amp
     
