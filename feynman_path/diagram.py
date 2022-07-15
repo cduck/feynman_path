@@ -167,7 +167,7 @@ class Diagram:
                  marker_start=self.make_arrow(color)))
 
     def gate_arrow(self, g, time1, key1, key2, amp=1):
-        w = max(float(abs(amp)),.3)
+        w = max(float(abs(amp)),.1)
         x1, y1 = self.state_xy(key1, time1)
         x2, y2 = self.state_xy(key2, time1+1)
         x1 += self.arrow_off
@@ -186,8 +186,7 @@ class Diagram:
         angle = sympy.arg(amp)+ offset
         angle = angle % (2*sympy.pi)
         angle = (angle / (2*sympy.pi)).evalf(2)
-        mag = min(1,abs(self.get_amp_as_value(amp,n=1)))
-        rgb = hls_to_rgb(angle,0.6,mag)
+        rgb = hls_to_rgb(angle,0.6,1)
         rgb = tuple(int(x*255) for x in rgb)
         return '#%02x%02x%02x' % (rgb)
     def get_abs(self, amp):
