@@ -33,14 +33,12 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Framework :: IPython',
         'Framework :: Jupyter',
     ],
     install_requires = [
-        'drawSvg~=1.8',
-        'latextools~=0.4',
+        'drawSvg~=2.0',
+        'latextools~=0.5',
         'sympy~=1.7',
     ],
 )

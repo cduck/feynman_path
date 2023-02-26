@@ -2,7 +2,7 @@ import functools
 import itertools
 import sympy
 from sympy.printing.latex import latex
-import drawSvg as draw
+import drawsvg as draw
 import latextools
 
 VERBOSE = False
@@ -18,7 +18,7 @@ def _disp(svg, msg):
     class DispWrap:
         def _repr_svg_(self): return d._repr_svg_()
         def __repr__(self): return msg
-    d = draw.Drawing(50, 20, origin='center', displayInline=False)
+    d = draw.Drawing(50, 20, origin='center')
     d.draw(svg, center=True)
     display(DispWrap())
     return svg
@@ -113,7 +113,7 @@ class Diagram:
         h = (self.num_states-1) * self.h_state + self.font*2 + self.gate_font*3
         x = -self.w_label/2 + self.font
         y = -(self.num_states-1)/2 * self.h_state - self.font*1.5
-        d = draw.Drawing(w, h, origin=(x, y), displayInline=False)
+        d = draw.Drawing(w, h, origin=(x, y))
         d.append(self.d)
         return d
     def _repr_html_(self):

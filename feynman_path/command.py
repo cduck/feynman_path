@@ -68,11 +68,11 @@ def save_formats_from_pdf(p, name, msg='', svg=False, png=False, pdf=False,
     if svg or png:
         d = p.as_svg().as_drawing()
     if svg:
-        d.saveSvg(f'{name}.svg')
+        d.save_svg(f'{name}.svg')
         print(f'Saved "{name}.svg"{msg}')
     if png:
-        d.setPixelScale(scale)
-        d.savePng(f'{name}.png')
+        d.set_pixel_scale(scale)
+        d.save_png(f'{name}.png')
         print(f'Saved "{name}.png"{msg}')
 
 def save_formats_from_svg(d, name, msg='', svg=False, png=False, pdf=False,
@@ -82,11 +82,11 @@ def save_formats_from_svg(d, name, msg='', svg=False, png=False, pdf=False,
         p.save(f'{name}.pdf')
         print(f'Saved "{name}.pdf"{msg}')
     if svg:
-        d.saveSvg(f'{name}.svg')
+        d.save_svg(f'{name}.svg')
         print(f'Saved "{name}.svg"{msg}')
     if png:
-        d.setPixelScale(scale)
-        d.savePng(f'{name}.png')
+        d.set_pixel_scale(scale)
+        d.save_png(f'{name}.png')
         print(f'Saved "{name}.png"{msg}')
 
 def main(name, n_qubits, gates, svg=False, png=False, pdf=False, sequence=False,

@@ -122,8 +122,8 @@ f.perform_cnot(1, 0)
 f.draw()  # Display in Jupyter
 ```
 ```python
-f.draw().saveSvg('output.svg')  # Save SVG
-f.draw().setPixelScale(2).savePng('output.png')  # Save PNG
+f.draw().save_svg('output.svg')  # Save SVG
+f.draw().set_pixel_scale(2).save_png('output.png')  # Save PNG
 import latextools
 latextools.svg_to_pdf(f.draw()).save('output.pdf')  # Save PDF
 ```
