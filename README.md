@@ -118,6 +118,7 @@ f.perform_cnot(1, 2, pre_latex=r'\color{red!80!black}')
 f.perform_h(0)
 f.perform_h(1)
 f.perform_cnot(1, 0)
+f.perform_h(1)
 
 f.draw()  # Display in Jupyter
 ```
@@ -145,7 +146,7 @@ The [CNOT gate](https://en.wikipedia.org/wiki/Controlled_NOT_gate) (⋅–⨁) c
 Note the output (rightmost) column is an entangled state: |00⟩+|11⟩
 
 ```bash
-feynman_path no-entanglement 2 h0 cnot0,1 h0 h1
+feynman_path entanglement 2 h0 cnot0,1 h0 h1
 ```
 
 **Fail to create a bell pair by using a CNOT on the |++⟩ state (q0=|+⟩, q1=|+⟩):**
